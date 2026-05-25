@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roulette tactile</title>
+<style>
+  :root {
+    --bg: #0d1321;
+    --panel: #15202f;
+    --panel-alt: #1e283b;
+    --text: #eef3ff;
+    --muted: #8fa5c2;
+    --border: rgba(255,255,255,0.14);
+    --red: #d33c45;
+    --black: #111;
+    --green: #28d07f;
+    --street1: rgba(255,190,50,0.35);
+    --street2: rgba(84,180,255,0.35);
+    --street3: rgba(173,90,255,0.35);
+    --street4: rgba(255,105,135,0.35);
+    --street5: rgba(72,220,170,0.35);
+    --street6: rgba(255,155,70,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Inter, system-ui, sans-serif;
+    color: var(--text);
+    background: radial-gradient(circle at top, #182540 0%, #0c1221 45%, #070a12 100%);
+  }
+
+  .app {
+    max-width: 1240px;
+    margin: auto;
+    padding: 18px;
+    display: grid;
+    gap: 18px;
+  }
+
+  .title {
+    margin: 0;
+    text-align: center;
+    font-size: 1.75rem;
+  }
+
+  .layout {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 1.08fr 0.92fr;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 18px;
+    box-shadow: 0 22px 50px rgba(0,0,0,0.22);
+  }
+
+  .panel h2 {
+    margin: 0 0 14px;
+    font-size: 1.05rem;
+  }
+
+  .roulette-board {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 90px repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 54px;
+    max-width: 520px;
+    margin: auto;
+  }
+
+  .roulette-board button {
+    position: relative;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.10);
+    font-weight: 700;
+    font-size: 0.98rem;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .15s ease, border-color .15s ease;
+    background: rgba(255,255,255,0.04);
+    overflow: hidden;
+    color: var(--text);
+  }
+
+  .roulette-board button:hover,
+  .roulette-board button:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 18px rgba(0,0,0,0.22);
+    outline: none;
+  }
+
+  .roulette-board button.num-red { background: var(--red); color: #fff; }
+  .roulette-board button.num-black { background: var(--black); color: #fff; }
+  .roulette-board button.num-green { background: var(--green); color: #071405; }
+
+  .roulette-board button.probable {
+    border-color: rgba(90,164,255,0.95);
+    box-shadow: 0 0 0 3px rgba(90,164,255,0.18);
+  }
+
+  .roulette-board button.street-1 { box-shadow: inset 0 0 0 4px rgba(255,190,50,0.55); }
+  .roulette-board button.street-2 { box-shadow: inset 0 0 0 4px rgba(84,180,255,0.55); }
+  .roulette-board button.street-3 { box-shadow: inset 0 0 0 4px rgba(173,90,255,0.55); }
+  .roulette-board button.street-4 { box-shadow: inset 0 0 0 4px rgba(255,105,135,0.55); }
+  .roulette-board button.street-5 { box-shadow: inset 0 0 0 4px rgba(72,220,170,0.55); }
+  .roulette-board button.street-6 { box-shadow: inset 0 0 0 4px rgba(255,155,70,0.55); }
+
+  .roulette-board button.street-1::after,
+  .roulette-board button.street-2::after,
+  .roulette-board button.street-3::after,
+  .roulette-board button.street-4::after,
+  .roulette-board button.street-5::after,
+  .roulette-board button.street-6::after {
+    content: attr(data-street);
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 0.66rem;
+    font-weight: 800;
+    color: #111;
+    background: rgba(255,255,255,0.95);
+    border-radius: 999px;
+    padding: 2px 6px;
+    pointer-events: none;
+  }
+
+  .zero-cell { grid-column: 1 / span 1; grid-row: 1 / span 1; }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+  }
+
+  .btn-clear {
+    border: none;
+    border-radius: 14px;
+    padding: 12px 18px;
+    background: #375b8a;
+    color: var(--text);
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .info-block { color: var(--muted); font-size: 0.95rem; }
+
+  .summary-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card {
+    background: var(--panel-alt);
+    border-radius: 20px;
+    padding: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .card h3 {
+    margin: 0 0 10px;
+    color: #79b7ff;
+    font-size: 0.98rem;
+  }
+
+  .compact-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+  }
+
+  .compact-table th,
+  .compact-table td {
+    text-align: left;
+    padding: 8px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .compact-table th { color: var(--muted); font-weight: 600; }
+  .compact-table tbody {
+    display: block;
+    max-height: 210px;
+    overflow: auto;
+  }
+  .compact-table thead,
+  .compact-table tr { display: table; width: 100%; table-layout: fixed; }
+
+  .history { display: grid; grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: 8px; }
+  .history span {
+    border-radius: 14px;
+    padding: 10px 0;
+    text-align: center;
+    font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .history .num-red { background: rgba(217,65,77,0.18); color: #fff; }
+  .history .num-black { background: rgba(255,255,255,0.07); color: #fff; }
+  .history .num-green { background: rgba(77,236,124,0.18); color: #071205; }
+
+  @media(max-width:1050px){ .layout{grid-template-columns:1fr;} .summary-grid{grid-template-columns:1fr;} }
+  @media(max-width:720px){ .roulette-board{gap:6px;} .card{padding:12px;} }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1 class="title">Roulette tactile</h1>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>Pavé de jeu</h2>
+      <div class="roulette-board" id="roulette-grid"></div>
+
+      <div class="controls">
+        <button class="btn-clear" id="clear-history">Réinitialiser</button>
+        <div class="info-block">Historique max 50 numéros · mise à jour automatique.</div>
+      </div>
+
+      <div class="card">
+        <h3>Derniers numéros</h3>
+        <div class="history" id="history-list"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Analyse et priorités</h2>
+      <div class="summary-grid">
+        <div class="card">
+          <h3>10 numéros probables</h3>
+          <table class="compact-table">
+            <thead><tr><th>N°</th><th>Score</th><th>Type</th></tr></thead>
+            <tbody id="forecast-table"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>10 numéros chauds</h3>
+          <table class="compact-table">
+            <thead><tr><th>N°</th><th>Fréq</th><th>%</th></tr></thead>
+            <tbody id="hot-table"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>6 transversales probables</h3>
+          <table class="compact-table">
+            <thead><tr><th>Transversale</th><th>Hits</th><th>Score</th></tr></thead>
+            <tbody id="streets-table"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Position cylindre</h3>
+          <table class="compact-table">
+            <thead><tr><th>N°</th><th>Pos</th><th>Count</th></tr></thead>
+            <tbody id="cyl-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  const cylinderOrder = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+  const colors = {
+    0:'green',1:'red',2:'black',3:'red',4:'black',5:'red',6:'black',
+    7:'red',8:'black',9:'red',10:'black',11:'black',12:'red',
+    13:'black',14:'red',15:'black',16:'red',17:'black',18:'red',
+    19:'red',20:'black',21:'red',22:'black',23:'red',24:'black',
+    25:'red',26:'black',27:'red',28:'black',29:'black',30:'red',
+    31:'black',32:'red',33:'black',34:'red',35:'black',36:'red'
+  };
+  const streetGroups = [
+    { name:'T1', numbers:[1,2,3] },
+    { name:'T2', numbers:[4,5,6] },
+    { name:'T3', numbers:[7,8,9] },
+    { name:'T4', numbers:[10,11,12] },
+    { name:'T5', numbers:[13,14,15] },
+    { name:'T6', numbers:[16,17,18] },
+    { name:'T7', numbers:[19,20,21] },
+    { name:'T8', numbers:[22,23,24] },
+    { name:'T9', numbers:[25,26,27] },
+    { name:'T10', numbers:[28,29,30] },
+    { name:'T11', numbers:[31,32,33] },
+    { name:'T12', numbers:[34,35,36] }
+  ];
+  const streetClass = ['street-1','street-2','street-3','street-4','street-5','street-6'];
+  const maxHistory = 50;
+  let history = [];
+
+  const grid = document.getElementById('roulette-grid');
+  const historyList = document.getElementById('history-list');
+  const forecastTable = document.getElementById('forecast-table');
+  const hotTable = document.getElementById('hot-table');
+  const streetsTable = document.getElementById('streets-table');
+  const cylTable = document.getElementById('cyl-table');
+  const clearBtn = document.getElementById('clear-history');
+
+  function buildBoard() {
+    const zero = document.createElement('button');
+    zero.textContent = '0';
+    zero.dataset.num = 0;
+    zero.className = 'zero-cell num-green';
+    zero.addEventListener('click', () => registerNumber(0));
+    grid.appendChild(zero);
+
+    for (let num = 1; num <= 36; num++) {
+      const row = Math.floor((num - 1) / 3) + 1;
+      const col = ((num - 1) % 3) + 2;
+      const btn = document.createElement('button');
+      btn.textContent = num;
+      btn.dataset.num = num;
+      btn.className = `num-${colors[num]}`;
+      btn.style.gridRow = row;
+      btn.style.gridColumn = col;
+      btn.addEventListener('click', () => registerNumber(num));
+      grid.appendChild(btn);
+    }
+  }
+
+  function registerNumber(num) {
+    history.unshift(num);
+    if (history.length > maxHistory) history.pop();
+    render();
+  }
+
+  function clearHistory() {
+    history = [];
+    render();
+  }
+
+  function frequency() {
+    const freq = Array(37).fill(0);
+    history.forEach(n => freq[n]++);
+    return freq.map((count, number) => ({
+      number,
+      count,
+      pct: history.length ? (count * 100 / history.length).toFixed(1) : '0.0'
+    }));
+  }
+
+  function hotNumbers() {
+    return frequency()
+      .filter(item => item.count > 0)
+      .sort((a,b) => b.count - a.count || a.number - b.number)
+      .slice(0, 10);
+  }
+
+  function probableNumbers() {
+    const freq = frequency();
+    const recent = history.slice(0, 5);
+    const recentScore = Array(37).fill(0);
+    recent.forEach((n, idx) => recentScore[n] += (6 - idx) * 0.9);
+    return freq
+      .map(item => ({
+        number: item.number,
+        score: item.count * 1.4 + recentScore[item.number] + (item.count ? 1 : 0),
+        count: item.count
+      }))
+      .sort((a,b) => b.score - a.score || a.number - b.number)
+      .slice(0, 10);
+  }
+
+  function streetScores() {
+    if (!history.length) return [];
+    const freq = frequency();
+    return streetGroups
+      .map(group => {
+        const hits = group.numbers.reduce((sum, number) => sum + freq[number].count, 0);
+        const recency = group.numbers.reduce((sum, n) => sum + history.slice(0,5).filter(x => x === n).length, 0);
+        return { name: group.name, numbers: group.numbers, hits, score: hits * 1.5 + recency * 2 };
+      })
+      .sort((a,b) => b.score - a.score || b.hits - a.hits)
+      .slice(0, 6);
+  }
+
+  function cylinderStats() {
+    const freq = frequency();
+    return cylinderOrder.map((number, index) => ({
+      number,
+      position: index + 1,
+      count: freq[number].count
+    })).sort((a,b) => b.count - a.count || a.position - b.position).slice(0, 12);
+  }
+
+  function render() {
+    const probable = history.length ? probableNumbers().map(item => item.number) : [];
+    const topStreets = streetScores();
+    const streetMap = new Map();
+    topStreets.forEach((street, idx) => {
+      street.numbers.forEach(number => streetMap.set(number, { class: streetClass[idx], label: street.name }));
+    });
+
+    grid.querySelectorAll('button').forEach(btn => {
+      const num = Number(btn.dataset.num);
+      btn.className = `num-${colors[num]}`;
+      btn.removeAttribute('data-street');
+      if (probable.includes(num)) btn.classList.add('probable');
+      if (streetMap.has(num)) {
+        const info = streetMap.get(num);
+        btn.classList.add(info.class);
+        btn.dataset.street = info.label;
+      }
+    });
+
+    historyList.innerHTML = '';
+    history.forEach(num => {
+      const span = document.createElement('span');
+      span.textContent = num;
+      span.className = `num-${colors[num]}`;
+      historyList.appendChild(span);
+    });
+
+    forecastTable.innerHTML = '';
+    probableNumbers().forEach(item => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${item.number}</td><td>${item.score.toFixed(1)}</td><td>${item.count ? 'Historique' : 'Probable'}</td>`;
+      forecastTable.appendChild(row);
+    });
+
+    hotTable.innerHTML = '';
+    hotNumbers().forEach(item => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${item.number}</td><td>${item.count}</td><td>${item.pct}%</td>`;
+      hotTable.appendChild(row);
+    });
+
+    streetsTable.innerHTML = '';
+    streetScores().forEach(street => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${street.name}</td><td>${street.hits}</td><td>${street.score.toFixed(1)}</td>`;
+      streetsTable.appendChild(row);
+    });
+
+    cylTable.innerHTML = '';
+    cylinderStats().forEach(item => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${item.number}</td><td>${item.position}</td><td>${item.count}</td>`;
+      cylTable.appendChild(row);
+    });
+  }
+
+  clearBtn.addEventListener('click', clearHistory);
+  buildBoard();
+  render();
+</script>
+</body>
+</html>
